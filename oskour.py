@@ -43,6 +43,11 @@ class Contributor:
                     skill.level += 1
                 return
 
+    def getLevelForRole(self, role):
+        for skill in self.skills:
+            if skill.name == role.name:
+                return skill.level
+
 class Project:
     name = ""
     duration = 0
@@ -106,17 +111,18 @@ def dummyAssignments(contributors, projets, works):
 
     for project in projets:
         assignments = {}
-        remainingRoles = list(project.roles)
-        nbRoles = len(remainingRoles)
 
         for contributor in contributors:
-            for role in remainingRoles:
+            for role in project.roles:
                 if contributor.canFulfillRole(role):
-                    remainingRoles.remove(role)
-                    assignments[role] = contributor
+                    if assignments.get(role) != None:
+                        if assignments[role].getLevelForRole(role) > contributor.getLevelForRole(role):
+                            assignments[role] = contributor
+                    else:
+                        assignments[role] = contributor
                     break
 
-        if len(remainingRoles) == 0:
+        if len(assignments) == len(project.roles):
             addWork(works, project, assignments)
 
 def addWork(works, project, assignments):
@@ -136,7 +142,7 @@ def main(path):
     file = open(path)
     read_file(file, contributors, projets)
 
-    projets.sort(key=lambda project: project.bestBefore)
+    #projets.sort(key=lambda project: project.bestBefore)
 
     dummyAssignments(contributors, projets, works)
 
