@@ -48,6 +48,23 @@ class Contributor:
             if skill.name == role.name:
                 return skill.level
 
+    def canBeMentored(self, role):
+        return self.getLevelForRole(role) == role.level - 1
+
+    def canBeAMentor(self, role):
+        level = self.getLevelForRole(role)
+        if level == None:
+            return False
+        return level >= role.level
+
+    def countCanMentor(self, roles):
+        count = 0
+
+        for role in roles:
+            if self.canBeAMentor(role):
+                count += 1
+        return count
+
 class Project:
     name = ""
     duration = 0
@@ -105,25 +122,69 @@ def read_file(file, contributors, projets):
             project.addRole(Skill(skillLine[0], int(skillLine[1])))
         projets.append(project)
 
-def dummyAssignments(contributors, projets, works):
-    assignments = None
-    remainingRoles = None
+def dummyAssignments(contributors, projects, works):
+    todo = projects
+    loops = 0
 
-    for project in projets:
-        assignments = {}
+    while len(todo) > 0 and loops < 10:
+        loops += 1
 
-        for contributor in contributors:
-            for role in project.roles:
-                if contributor.canFulfillRole(role):
-                    if assignments.get(role) != None:
-                        if assignments[role].getLevelForRole(role) > contributor.getLevelForRole(role):
-                            assignments[role] = contributor
-                    else:
-                        assignments[role] = contributor
+        for project in todo:
+            assignments = {}
+            innerContinue = False
+
+            for i in range(len(project.roles)):
+                bestForTheJob = None
+                isAJunior = False
+                canMentor = 0
+
+                role = project.roles[i]
+                nextRoles = project.roles[i + 1:]
+
+                for contributor in contributors:
+                    for assigned in assignments.values():
+                        if assigned == contributor:
+                            innerContinue = True
+                            break
+
+                    if innerContinue:
+                        innerContinue = False
+                        continue
+
+                    if (bestForTheJob == None or isAJunior == False) and contributor.canFulfillRole(role):
+                        if bestForTheJob == None:
+                            bestForTheJob = contributor
+                            canMentor = contributor.countCanMentor(nextRoles)
+                        else:
+                            actualCanMentor = contributor.countCanMentor(nextRoles)
+                            if actualCanMentor > canMentor:
+                                bestForTheJob = contributor
+                                canMentor = actualCanMentor
+                            elif actualCanMentor == canMentor and contributor.getLevelForRole(role) < bestForTheJob.getLevelForRole(role):
+                                bestForTheJob = contributor
+
+                    if contributor.canBeMentored(role):
+                        for mentor in assignments.values():
+                            if mentor.canBeAMentor(role):
+                                if bestForTheJob == None or isAJunior == False:
+                                    bestForTheJob = contributor
+                                    canMentor = contributor.countCanMentor(nextRoles)
+                                    isAJunior = True
+                                else:
+                                    actualCanMentor = contributor.countCanMentor(nextRoles)
+                                    if actualCanMentor > canMentor:
+                                        bestForTheJob = contributor
+                                        canMentor = actualCanMentor
+                                break
+
+                if bestForTheJob == None:
                     break
+
+                assignments[role] = bestForTheJob
 
         if len(assignments) == len(project.roles):
             addWork(works, project, assignments)
+            todo.remove(project)
 
 def addWork(works, project, assignments):
     workers = []
@@ -142,7 +203,7 @@ def main(path):
     file = open(path)
     read_file(file, contributors, projets)
 
-    #projets.sort(key=lambda project: project.bestBefore)
+    projets.sort(key=lambda project: project.bestBefore)
 
     dummyAssignments(contributors, projets, works)
 
