@@ -98,19 +98,26 @@ def dummyAssignments(contributors, projets, works):
     remainingRoles = None
 
     for project in projets:
-        assignments = []
-        remainingRoles = project.roles
+        assignments = {}
+        remainingRoles = list(project.roles)
+        nbRoles = len(remainingRoles)
 
         for contributor in contributors:
             for role in remainingRoles:
                 if contributor.canFulfillRole(role):
                     remainingRoles.remove(role)
-                    assignments.append(contributor)
+                    assignments[role] = contributor
                     break
 
         if len(remainingRoles) == 0:
-            works.append(Work(project.name, assignments))
+            addWork(works, project, assignments)
 
+def addWork(works, project, assignments):
+    workers = []
+
+    for role in project.roles:
+        workers.append(assignments[role])
+    works.append(Work(project.name, workers))
 
 # Open file, fill lists, run simulation
 def main(path):
