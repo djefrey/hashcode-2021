@@ -136,6 +136,8 @@ def main(path):
     file = open(path)
     read_file(file, contributors, projets)
 
+    projets.sort(key=lambda project: project.bestBefore)
+
     dummyAssignments(contributors, projets, works)
 
     print(len(works))
