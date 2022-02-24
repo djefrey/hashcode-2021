@@ -30,6 +30,12 @@ class Contributor:
             ret += skill.__repr__() + "\n"
         return ret
 
+    def canFulfillRole(self, role):
+        for skill in self.skills:
+            if skill.name == role.name and skill.level >= role.level:
+                return True
+        return False
+
 class Project:
     name = ""
     duration = 0
@@ -52,6 +58,14 @@ class Project:
         for role in self.roles:
             ret += role.__repr__() + "\n"
         return ret
+
+class Work:
+    name = ""
+    workers = None
+
+    def __init__(self, name, workers):
+        self.name = name
+        self.workers = workers
 
 # Fill contributors and projets
 def read_file(file, contributors, projets):
@@ -79,18 +93,47 @@ def read_file(file, contributors, projets):
             project.addRole(Skill(skillLine[0], int(skillLine[1])))
         projets.append(project)
 
+def dummyAssignments(contributors, projets, works):
+    assignments = None
+    remainingRoles = None
+
+    for project in projets:
+        assignments = []
+        remainingRoles = project.roles
+
+        for contributor in contributors:
+            for role in remainingRoles:
+                if contributor.canFulfillRole(role):
+                    remainingRoles.remove(role)
+                    assignments.append(contributor)
+                    break
+
+        if len(remainingRoles) == 0:
+            works.append(Work(project.name, assignments))
+
+
 # Open file, fill lists, run simulation
 def main(path):
     contributors = []
     projets = []
+    works = []
 
     file = open(path)
     read_file(file, contributors, projets)
 
-    for contributor in contributors:
-        print(contributor)
-    for project in projets:
-        print(project)
+    dummyAssignments(contributors, projets, works)
+
+    print(len(works))
+    for work in works:
+        workers = work.workers
+
+        print(work.name)
+        for i in range(0, len(workers)):
+            if i > 0:
+                print(f" {workers[i].name}", end='')
+            else:
+                print(workers[i].name, end='')
+        print()
 
 if __name__ == "__main__":
     main(sys.argv[1])
