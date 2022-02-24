@@ -15,10 +15,11 @@ class Skill:
 
 class Contributor:
     name = ""
-    skills = []
+    skills = None
 
     def __init__(self, name):
         self.name = name
+        self.skills = []
 
     def addSkill(self, role):
         self.skills.append(role)
@@ -34,13 +35,14 @@ class Project:
     duration = 0
     score = 0
     bestBefore = 0
-    roles = []
+    roles = None
 
     def __init__(self, name, duration, score, bestBefore):
         self.name = name
         self.duration = duration
         self.score = score
         self.bestBefore = bestBefore
+        self.roles = []
 
     def addRole(self, skill):
         self.roles.append(skill)
