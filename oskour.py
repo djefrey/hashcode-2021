@@ -24,7 +24,7 @@ class Contributor:
         self.skills.append(role)
 
     def __repr__(self):
-        ret = f"Contributor: {self.name}"
+        ret = f"Contributor: {self.name}\n"
         for skill in self.skills:
             ret += skill.__repr__() + "\n"
         return ret
