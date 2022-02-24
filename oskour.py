@@ -36,6 +36,13 @@ class Contributor:
                 return True
         return False
 
+    def doneJob(self, role):
+        for skill in self.skills:
+            if skill.name == role.name:
+                if skill.level <= role.level:
+                    skill.level += 1
+                return
+
 class Project:
     name = ""
     duration = 0
@@ -116,6 +123,7 @@ def addWork(works, project, assignments):
     workers = []
 
     for role in project.roles:
+        assignments[role].doneJob(role)
         workers.append(assignments[role])
     works.append(Work(project.name, workers))
 
